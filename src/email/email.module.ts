@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { EmailService } from './email.service';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
+import { ScheduleModule } from '@nestjs/schedule';
 
 /**
  * Module for email-related functionality.
@@ -19,6 +20,7 @@ import * as Joi from 'joi';
         abortEarly: true,
       },
     }),
+    ScheduleModule.forRoot(),
   ],
   providers: [EmailService],
   exports: [EmailService],

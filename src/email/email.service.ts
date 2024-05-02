@@ -113,4 +113,28 @@ export class EmailService {
 
     return null;
   }
+
+  /**
+   * Sends all scheduled emails.
+   */
+  async sendScheduledEmails(): Promise<void> {
+    const emails = await this.emailRepository.getEmailsToSendBefore(new Date());
+
+    const emailsPromises = emails.map(async (email) => {
+      try {
+        await this.sendEmailImmediately(email);
+        await this.emailRepository.deleteDelayedEmail(email.id);
+      } catch (error) {
+        this.logger.error(
+          `Handle scheduled email failed with error: ${JSON.stringify({
+            subject: email.subject,
+            userId: email.user?.id,
+            error: error.toString(),
+          })}`,
+        );
+      }
+    });
+
+    await Promise.all(emailsPromises);
+  }
 }
