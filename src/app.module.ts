@@ -14,6 +14,7 @@ import { SessionSerializer } from './auth/serializers/session.serializer';
 import { SessionMiddleware } from './auth/middlewares/session.middleware';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { AuthModule } from './auth/auth.module';
       },
     }),
     AuthModule,
+    EmailModule,
     UsersModule,
   ],
   controllers: [],
