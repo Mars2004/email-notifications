@@ -1,18 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { EmailService } from './email.service';
-
-import * as SendGrid from '@sendgrid/mail';
 import { EmailEntity } from './entities/email.entity';
 import { EmailRepository } from './repositories/email.repository';
+import { MailerService } from '@nestjs-modules/mailer';
+
+/*import * as SendGrid from '@sendgrid/mail';
 jest.mock('@sendgrid/mail', () => ({
   setApiKey: jest.fn(),
   send: jest.fn(),
-}));
+}));*/
 
 describe('EmailService', () => {
   let emailService: EmailService;
   let configService: ConfigService;
+  let mailerService: MailerService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -27,11 +29,18 @@ describe('EmailService', () => {
             deleteDelayedEmail: jest.fn(),
           },
         },
+        {
+          provide: MailerService,
+          useValue: {
+            sendMail: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     emailService = module.get<EmailService>(EmailService);
     configService = module.get<ConfigService>(ConfigService);
+    mailerService = module.get<MailerService>(MailerService);
   });
 
   afterEach(() => {
@@ -40,7 +49,7 @@ describe('EmailService', () => {
 
   describe('sendEmailImmediately', () => {
     const testSendEmailData: Partial<EmailEntity> = {
-      templateKey: 'test-template-key',
+      templateKey: 'expiration',
       subject: 'Test Email',
       body: {
         id: '123',
@@ -55,7 +64,7 @@ describe('EmailService', () => {
       user: { id: 'test-user-id' },
     };
 
-    it('should send the email message', async () => {
+    /*it('should send the email message', async () => {
       await emailService.sendEmailImmediately(testSendEmailData);
 
       expect(SendGrid.send).toHaveBeenCalledTimes(1);
@@ -82,13 +91,67 @@ describe('EmailService', () => {
           },
         },
       });
+    });*/
+
+    it('should send the email message', async () => {
+      await emailService.sendEmailImmediately(testSendEmailData);
+
+      expect(mailerService.sendMail).toHaveBeenCalledTimes(1);
+      expect(mailerService.sendMail).toHaveBeenCalledWith({
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        to: testSendEmailData!.to![0],
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        cc: testSendEmailData!.to!.slice(1),
+        bcc: testSendEmailData.bcc,
+        from: configService.get('SMTP_DEFAULT_FROM'),
+        subject: testSendEmailData.subject,
+        html: expect.any(String),
+      });
     });
+
+    it('should throw an error if no recipient is specified', async () => {
+      await expect(
+        emailService.sendEmailImmediately({
+          ...testSendEmailData,
+          to: [],
+        }),
+      ).rejects.toThrow('No recipient specified');
+    });
+
+    it('should throw an error if the template key is missing', async () => {
+      await expect(
+        emailService.sendEmailImmediately({
+          ...testSendEmailData,
+          templateKey: undefined,
+        }),
+      ).rejects.toThrow('Template key is missing');
+    });
+
+    it('should throw an error if template not found', async () => {
+      await expect(
+        emailService.sendEmailImmediately({
+          ...testSendEmailData,
+          templateKey: 'missing',
+        }),
+      ).rejects.toThrow('Template not found: missing');
+    });
+
+    /*it('should throw an error if sending the email fails', async () => {
+      const error = new Error('Failed to send email');
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      SendGrid.send.mockRejectedValueOnce(error);
+
+      await expect(
+        emailService.sendEmailImmediately(testSendEmailData),
+      ).rejects.toThrow(error);
+    });*/
 
     it('should throw an error if sending the email fails', async () => {
       const error = new Error('Failed to send email');
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      SendGrid.send.mockRejectedValueOnce(error);
+      mailerService.sendMail.mockRejectedValueOnce(error);
 
       await expect(
         emailService.sendEmailImmediately(testSendEmailData),

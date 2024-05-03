@@ -11,7 +11,7 @@ import { EmailEntity } from '../entities/email.entity';
 /**
  * Data Transfer Object (DTO) for the body data of the email.
  * */
-@ApiTags('Emails')
+@ApiTags('Email')
 export class BodyData {
   @ApiProperty({ description: 'The id.' })
   @IsString()
@@ -34,11 +34,12 @@ export class BodyData {
 /**
  * Data Transfer Object (DTO) for sending email.
  */
-@ApiTags('Emails')
+@ApiTags('Email')
 export class SendEmailDto {
   @ApiProperty({
     title: 'The template key of the email.',
-    description: 'The template key of the email to fill by the data.',
+    description:
+      'The template key of the email to fill by the data. Only "expiration" is supported.',
     nullable: false,
     required: true,
   })
@@ -57,8 +58,8 @@ export class SendEmailDto {
   subject: string;
 
   @ApiProperty({
-    title: 'The date and time to send the email.',
-    description: 'The date and time to send the email.',
+    title: 'The date and time to send the email in UTC timezone.',
+    description: 'The date and time to send the email in UTC timezone.',
     nullable: true,
     required: false,
   })

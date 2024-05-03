@@ -35,6 +35,7 @@ export class EmailRepository {
   async getEmailsToSendBefore(before: Date): Promise<EmailEntity[]> {
     return this.emailRepository.find({
       where: { sendAt: LessThan(before) },
+      relations: ['user'],
     });
   }
 

@@ -17,8 +17,8 @@ import { UserEntity } from '../users/entities/user.entity';
 import { EmailService } from './email.service';
 import { SendEmailDto, dtoSendEmailToEntity } from './dto/send-email.dto';
 
-@ApiTags('Emails')
-@Controller('emails')
+@ApiTags('Email')
+@Controller('email')
 export class EmailController {
   /**
    * The logger instance.

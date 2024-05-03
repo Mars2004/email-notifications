@@ -1,8 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import SendGrid = require('@sendgrid/mail');
+// import SendGrid = require('@sendgrid/mail');
 import { EmailEntity } from './entities/email.entity';
 import { EmailRepository } from './repositories/email.repository';
+import Handlebars from 'handlebars';
+import { templates } from './constants/templates';
+import { MailerService } from '@nestjs-modules/mailer';
 
 /**
  * Service for sending email messages.
@@ -34,9 +37,10 @@ export class EmailService {
   constructor(
     private readonly emailRepository: EmailRepository,
     private readonly configService: ConfigService,
+    private readonly mailerService: MailerService,
   ) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    SendGrid.setApiKey(this.configService.get('SENDGRID_API_KEY')!);
+    // SendGrid.setApiKey(this.configService.get('SENDGRID_API_KEY')!);
 
     // set sandbox mode based on the environment
     const nodeEnv = this.configService.get('NODE_ENV');
@@ -51,7 +55,7 @@ export class EmailService {
    * Sends an email message.
    * @param sendEmailDto The email message data.
    */
-  public async sendEmailImmediately(
+  /*public async sendEmailWithSengrid(
     sendEmailDto: Partial<EmailEntity>,
   ): Promise<void> {
     try {
@@ -95,6 +99,64 @@ export class EmailService {
 
       throw error;
     }
+  }*/
+
+  /**
+   * Sends an email message.
+   * @param sendEmailDto The email message data.
+   */
+  public async sendEmail(sendEmailDto: Partial<EmailEntity>): Promise<void> {
+    try {
+      if (!sendEmailDto.to || sendEmailDto.to.length === 0) {
+        throw new Error('No recipient specified');
+      }
+
+      if (!sendEmailDto.templateKey) {
+        throw new Error('Template key is missing');
+      }
+
+      const htmlTemplate = templates[sendEmailDto.templateKey];
+      if (!htmlTemplate) {
+        throw new Error(`Template not found: ${sendEmailDto.templateKey}`);
+      }
+
+      const template = Handlebars.compile(htmlTemplate);
+      const html = template(sendEmailDto.body);
+
+      await this.mailerService.sendMail({
+        to: sendEmailDto.to[0],
+        // without the first recipient, which is the primary recipient
+        cc: sendEmailDto.to.slice(1),
+        bcc: sendEmailDto.bcc,
+        from: this.configService.get('SMTP_DEFAULT_FROM'),
+        subject: sendEmailDto.subject,
+        html,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Send email failed with error: ${JSON.stringify({
+          subject: sendEmailDto.subject,
+          userId: sendEmailDto.user?.id,
+          error: error.toString(),
+        })}`,
+      );
+
+      throw error;
+    }
+  }
+
+  /**
+   * Sends an email message.
+   * @param sendEmailDto The email message data.
+   */
+  public async sendEmailImmediately(
+    sendEmailDto: Partial<EmailEntity>,
+  ): Promise<void> {
+    /*if (sendEmailDto.sendgrid) {
+      return this.sendEmailWithSengrid(sendEmailDto);
+    }*/
+
+    return this.sendEmail(sendEmailDto);
   }
 
   /**
