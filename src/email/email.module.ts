@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { EmailService } from './email.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
-import { Cron, ScheduleModule } from '@nestjs/schedule';
+import { ScheduleModule } from '@nestjs/schedule';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { EmailRepository } from './repositories/email.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
