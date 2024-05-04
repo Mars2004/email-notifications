@@ -59,7 +59,7 @@ export class EmailController {
     sendEmailPartialEntity.user = user;
 
     const delayedEmail = await this.emailService.sendOrStoreEmail(
-      dtoSendEmailToEntity(sendEmailDto),
+      sendEmailPartialEntity,
     );
 
     if (delayedEmail) {

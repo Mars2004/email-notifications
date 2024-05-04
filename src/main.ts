@@ -22,13 +22,12 @@ async function bootstrap() {
 
   // check if application is in development or stage mode
   const nodeEnv = configService.get<string>('NODE_ENV');
-  if (nodeEnv === 'local') {
+  if (nodeEnv === 'local' || nodeEnv === 'stage' || nodeEnv === 'development') {
     // enable swagger
     const config = new DocumentBuilder()
       .setTitle('Email Notification Service API')
       .setDescription('The Email Notification Service API description')
       .setVersion(appVersion)
-      .addTag('Notification')
       .addSecurity('api_key', {
         type: 'apiKey',
         name: 'x-api-key',

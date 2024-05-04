@@ -2,11 +2,13 @@ import { Module } from '@nestjs/common';
 import { EmailService } from './email.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
-import { ScheduleModule } from '@nestjs/schedule';
+import { Cron, ScheduleModule } from '@nestjs/schedule';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { EmailRepository } from './repositories/email.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EmailEntity } from './entities/email.entity';
+import { EmailController } from './email.controller';
+import { CronService } from './cron.service';
 
 /**
  * Module for email-related functionality.
@@ -49,7 +51,8 @@ import { EmailEntity } from './entities/email.entity';
     ScheduleModule.forRoot(),
     TypeOrmModule.forFeature([EmailEntity]),
   ],
-  providers: [EmailService, EmailRepository],
+  controllers: [EmailController],
+  providers: [EmailService, EmailRepository, CronService],
   exports: [EmailService],
 })
 export class EmailModule {}
